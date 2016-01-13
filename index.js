@@ -27,9 +27,8 @@ var appConfig = require('./appConfig')
 // setting cookie preservation
 request = request.defaults({jar: true})
 
-console.log('Start!');
+console.log('Yo Start!');
 
-  start();
 // set Interval so it get loaded every x hours.
 setInterval(function () {
 
