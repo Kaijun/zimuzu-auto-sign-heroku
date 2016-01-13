@@ -10,5 +10,5 @@ module.exports = [
     password: "114051306",
     remember: 1,
     url_back: 'http://www.zimuzu.tv/user/user/index'
-  }
+  },
 ]

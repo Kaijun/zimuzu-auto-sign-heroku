@@ -19,12 +19,14 @@ app.listen(app.get('port'), function() {
 /* True Batch Programm Starts! */
 
 var autoSign = new AutoSign();
-autoSign.doSignOneRound();
+autoSign.init();
 
 
 function AutoSign() {
 
   var TIMEOUT = 16000;
+  var WAIT_INTERVAL = 3*3600*1000
+  var ACCOUNT_WAIT_INTERVAL = 5000
   var request = require('request-promise');
   var accounts = require('./secret');
   var appConfig = require('./appConfig')
@@ -35,16 +37,24 @@ function AutoSign() {
 
   this.init = function () {
     console.log('Yo Start!');
+    var self = this;
     // Interval for every x hours.
     setInterval(function () {
-      accounts.forEach(function (accountForm) {
-        this.doSignOneRound(accountForm);
-        setTimeout(5000);
-      });
-    }, appConfig.TIME_INTERVAL);
+      doSignRecursive(0);
+      function doSignRecursive (idx) {
+        if(idx<accounts.length-1){
+          self.doSignOneRound(accounts[idx], function () {
+            doSignRecursive(idx+1);
+          })
+        }
+        else{
+          self.doSignOneRound(accounts[idx])
+        }
+      }
+    }, WAIT_INTERVAL);
   };
 
-  this.doSignOneRound = function (accountForm) {
+  this.doSignOneRound = function (accountForm, callback) {
     request.cookie = "";
     // Request login
     requestLogin(accountForm).then(function (data) {
@@ -56,10 +66,17 @@ function AutoSign() {
       setTimeout(function () {
         requestDoSign(appConfig.dosignURL, accountForm).then(function () {
           // Request Logout!
-          requestLogout(appConfig.logoutURL);
+          requestLogout(appConfig.logoutURL).then(function () {
+            // call next account do sign!
+            if(callback){
+              setTimeout(function () {
+                callback();
+              }, ACCOUNT_WAIT_INTERVAL)
+            }
+          });
         }).catch(function (err) {
           console.log(err);
-        })
+        });
       }, TIMEOUT);
       
     }).catch(function (err) {
@@ -77,12 +94,13 @@ function AutoSign() {
       }
     }).then(
       function (data) {
+        data = JSON.parse(data);
         if(parseInt(data.status)===1){
-          console.log('Login Successful!');
+          console.log('Login Successful! Username: ' + formData.account);
           return data;
         }
         else{
-          throw new Error('Abort, Login Failed!' + data.info);
+          throw new Error('Abort, Login Failed! ' + data.info);
           return null;
         }
       },
@@ -98,10 +116,6 @@ function AutoSign() {
       function (data) {
         console.log('Request Sign Page Done!');
         return data;
-      },
-      function (err) {
-        throw new Error('Abort, Request Sign Page Failed!');
-        return null;
       }
     );
   }
@@ -109,18 +123,15 @@ function AutoSign() {
   function requestDoSign (url, accountForm) {
     return request(url).then(
       function (data) {
+        data = JSON.parse(data);
         if(parseInt(data.status)===1){
-            console.log('Sign Successful!' + 'Username: ' + accountForm.account + 'Date: ' + new Date().toISOString().slice(0,10));
-            return data;
-          }
-          else{
-            throw new Error('Abort, Sign Failed!' + data.info);
-            return null;
-          }
-      },
-      function (err) {
-          throw new Error('Abort, Sign Failed!');
+          console.log('Sign Successful!' + ' Username: ' + accountForm.account + ' Date: ' + new Date().toISOString().slice(0,10));
+          return data;
+        }
+        else{
+          console.log('Sign Failed!' + ' Username:' + accountForm.account + ' ' + data.info);
           return null;
+        }
       }
     );
   }
