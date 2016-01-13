@@ -18,7 +18,7 @@ app.listen(app.get('port'), function() {
 
 /* True Batch Programm Starts! */
 
-
+var TIMEOUT = 16000;
 var request = require('request-promise');
 var accountForm = require('./secret');
 var appConfig = require('./appConfig')
@@ -29,6 +29,7 @@ request = request.defaults({jar: true})
 
 console.log('Start!');
 
+  start();
 // set Interval so it get loaded every x hours.
 setInterval(function () {
 
@@ -46,25 +47,30 @@ function start (argument) {
       'content-type': 'application/x-www-form-urlencoded'  // Set automatically
     }
   }).then(function (data) {
-    console.log('Login Done!   ' + data);
+    console.log('Login Done   ' + data);
 
-  // Request do-Sign
-    return request({
-      method: 'GET',
-      url: appConfig.dosignURL,
-      headers: {
-          Referer: appConfig.signURL,
-      }
-    });
-  }).then(function (data) {
-    console.log('Sign Done!   ' + data);
-
-  // Request logout
-    return request(appConfig.logoutURL);
-  }).then(function (data) {
-    console.log('Logout Done!   ' + data);
+  // Request Sign Page, it will change the cookies and do-sign API will check the session.
+    return request(appConfig.signURL)
   })
-  .catch(function (err) {
+  .then(function (data) {
+    console.log('Request Sign Page Done!');
+
+
+    // Request do-Sign
+    setTimeout(function () {
+      request(appConfig.dosignURL).then(function (data) {
+        console.log('Sign Done!   ' + data);
+        // Request logout
+        return request(appConfig.logoutURL);
+      }).then(function (data) {
+        console.log('Logout Done!   ' + data);
+      }).catch(function (err) {
+        console.log(err)
+      });
+    }, TIMEOUT)
+
+    
+  }).catch(function (err) {
     console.log(err)
   });
 
