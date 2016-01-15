@@ -37,23 +37,28 @@ function AutoSign() {
 
   this.init = function () {
     console.log('Yo Start!');
-    var self = this;
+    doSignRecursive();
     // Interval for every x hours.
     setInterval(function () {
-      doSignRecursive(0);
-      function doSignRecursive (idx) {
-        if(idx<accounts.length-1){
-          self.doSignOneRound(accounts[idx], function () {
-            doSignRecursive(idx+1);
-          })
-        }
-        else{
-          self.doSignOneRound(accounts[idx])
-        }
-      }
+      doSignRecursive();
     }, WAIT_INTERVAL);
   };
+  this.doSignRecursive = function () {
+    var self = this;
+    // Recursively do sign of all accounts.
+    doSign(0);
+    function doSign(idx) {
+      if(idx<accounts.length-1){
+        self.doSignOneRound(accounts[idx], function () {
+          doSign(idx+1);
+        })
+      }
+      else{
+        self.doSignOneRound(accounts[idx])
+      }
+    }
 
+  }
   this.doSignOneRound = function (accountForm, callback) {
     request.cookie = "";
     // Request login
