@@ -37,10 +37,11 @@ function AutoSign() {
 
   this.init = function () {
     console.log('Yo Start!');
-    doSignRecursive();
+    var self = this;
+    self.doSignRecursive();
     // Interval for every x hours.
     setInterval(function () {
-      doSignRecursive();
+      self.doSignRecursive();
     }, WAIT_INTERVAL);
   };
   this.doSignRecursive = function () {
