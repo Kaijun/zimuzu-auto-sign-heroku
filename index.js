@@ -25,11 +25,12 @@ autoSign.init();
 function AutoSign() {
 
   var TIMEOUT = 16000;
-  var WAIT_INTERVAL = 3*3600*1000
-  var ACCOUNT_WAIT_INTERVAL = 5000
+  var ACCOUNT_WAIT_INTERVAL = 5000;
+  var SIGNED_STAMP_FILENAME = 'account-singed-stamp'
   var request = require('request-promise');
   var accounts = require('./secret');
-  var appConfig = require('./appConfig')
+  var appConfig = require('./appConfig');
+  var fs = require('fs');
 
   // Configuration of Request Obj
   // setting cookie preservation
@@ -37,13 +38,9 @@ function AutoSign() {
 
   this.init = function () {
     console.log('Yo Start!');
-    var self = this;
-    self.doSignRecursive();
-    // Interval for every x hours.
-    setInterval(function () {
-      self.doSignRecursive();
-    }, WAIT_INTERVAL);
+    this.doSignRecursive();
   };
+
   this.doSignRecursive = function () {
     var self = this;
     // Recursively do sign of all accounts.
@@ -55,39 +52,66 @@ function AutoSign() {
         })
       }
       else{
-        self.doSignOneRound(accounts[idx])
+        self.doSignOneRound(accounts[idx], function () {
+          ;
+        })
       }
     }
+  };
 
-  }
-  this.doSignOneRound = function (accountForm, callback) {
-    request.cookie = "";
-    // Request login
-    requestLogin(accountForm).then(function (data) {
-      // Request Sign Page, it will change the cookies and do-sign API will check the session.
-      return requestSignPage(appConfig.signURL)
+  this.isAlreadySigned = function (accountName, doSign, skip) {
+    fs.readFile('./' + SIGNED_STAMP_FILENAME, function (err, data) {
+      if(data){
+        data = JSON.parse(data);
+        if(data[accountName] !== undefined){
+          var today = new Date().toISOString().substr(0,10);
+          if(data[accountName] != today){
+            doSign();
+          }
+          else{
+            skip();
+          }
+        }
+        else{
+          doSign();
+        }
+      }
+      else{
+        doSign();
+      }
     })
-    .then(function (data) {
-      // Request do-Sign, the server will check if the request is within 15 seconds.
-      setTimeout(function () {
-        requestDoSign(appConfig.dosignURL, accountForm).then(function () {
-          // Request Logout!
-          requestLogout(appConfig.logoutURL).then(function () {
-            // call next account do sign!
-            if(callback){
-              setTimeout(function () {
-                callback();
-              }, ACCOUNT_WAIT_INTERVAL)
-            }
+  };
+
+  this.doSignOneRound = function (accountForm, callback) {
+    this.isAlreadySigned(accountForm.account, function () {
+      request.cookie = "";
+      // Request login
+      requestLogin(accountForm).then(function (data) {
+        // Request Sign Page, it will change the cookies and do-sign API will check the session.
+        return requestSignPage(appConfig.signURL)
+      })
+      .then(function (data) {
+        // Request do-Sign, the server will check if the request is within 15 seconds.
+        setTimeout(function () {
+          requestDoSign(appConfig.dosignURL, accountForm).then(function () {
+            // Request Logout!
+            requestLogout(appConfig.logoutURL).then(function () {
+              // call next account do sign!
+              if(callback){
+                setTimeout(function () {
+                  callback();
+                }, ACCOUNT_WAIT_INTERVAL)
+              }
+            });
+          }).catch(function (err) {
+            console.log(err);
           });
-        }).catch(function (err) {
-          console.log(err);
-        });
-      }, TIMEOUT);
-      
-    }).catch(function (err) {
-      console.log(err);
-    });
+        }, TIMEOUT);
+        
+      }).catch(function (err) {
+        console.log(err);
+      });
+    }, callback);
   }
 
   function requestLogin (formData) {
@@ -131,7 +155,23 @@ function AutoSign() {
       function (data) {
         data = JSON.parse(data);
         if(parseInt(data.status)===1){
-          console.log('Sign Successful!' + ' Username: ' + accountForm.account + ' Date: ' + new Date().toISOString().slice(0,10));
+
+          fs.readFile('./' + SIGNED_STAMP_FILENAME, function (err, fileData) {
+            var writeData;
+            if(fileData === undefined){
+              writeData = {};
+            }
+            else{
+              writeData = JSON.parse(fileData);
+            }
+            writeData[accountForm.account] = new Date().toISOString().slice(0,10);
+
+            fs.writeFile('./' + SIGNED_STAMP_FILENAME, JSON.stringify(writeData), function (err) {
+                if (err) throw err;
+                console.log('Sign Successful!' + ' Username: ' + accountForm.account + ' Date: ' + new Date().toISOString().slice(0,10));
+            });
+          });
+
           return data;
         }
         else{
