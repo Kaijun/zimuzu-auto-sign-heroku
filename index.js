@@ -26,7 +26,7 @@ function AutoSign() {
 
   var TIMEOUT = 16000;
   var ACCOUNT_WAIT_INTERVAL = 5000;
-  var SIGNED_STAMP_FILENAME = 'account-singed-stamp'
+  var SIGNED_STAMP_FILENAME = './account-singed-stamp'
   var request = require('request-promise');
   var accounts = require('./secret');
   var appConfig = require('./appConfig');
@@ -60,7 +60,7 @@ function AutoSign() {
   };
 
   this.isAlreadySigned = function (accountName, doSign, skip) {
-    fs.readFile('./' + SIGNED_STAMP_FILENAME, function (err, data) {
+    fs.readFile(SIGNED_STAMP_FILENAME, function (err, data) {
       if(data){
         data = JSON.parse(data);
         if(data[accountName] !== undefined){
@@ -156,7 +156,7 @@ function AutoSign() {
         data = JSON.parse(data);
         if(parseInt(data.status)===1){
 
-          fs.readFile('./' + SIGNED_STAMP_FILENAME, function (err, fileData) {
+          fs.readFile(SIGNED_STAMP_FILENAME, function (err, fileData) {
             var writeData;
             if(fileData === undefined){
               writeData = {};
@@ -166,7 +166,7 @@ function AutoSign() {
             }
             writeData[accountForm.account] = new Date().toISOString().slice(0,10);
 
-            fs.writeFile('./' + SIGNED_STAMP_FILENAME, JSON.stringify(writeData), function (err) {
+            fs.writeFile(SIGNED_STAMP_FILENAME, JSON.stringify(writeData), function (err) {
                 if (err) throw err;
                 console.log('Sign Successful!' + ' Username: ' + accountForm.account + ' Date: ' + new Date().toISOString().slice(0,10));
             });
