@@ -24,6 +24,7 @@ autoSign.init();
 
 function AutoSign() {
 
+  var TRY_TIMEOUT = 3*3600*1000;
   var TIMEOUT = 16000;
   var ACCOUNT_WAIT_INTERVAL = 5000;
   var SIGNED_STAMP_FILENAME = './account-singed-stamp'
@@ -37,8 +38,12 @@ function AutoSign() {
   request = request.defaults({jar: true})
 
   this.init = function () {
+    var self = this;
     console.log('Yo Start!');
-    this.doSignRecursive();
+    self.doSignRecursive();
+    setInterval(function () {
+      self.doSignRecursive();
+    }, TRY_TIMEOUT);
   };
 
   this.doSignRecursive = function () {
