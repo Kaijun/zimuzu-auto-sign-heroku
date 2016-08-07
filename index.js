@@ -35,7 +35,16 @@ function AutoSign() {
 
   // Configuration of Request Obj
   // setting cookie preservation
-  request = request.defaults({jar: true})
+  request = request.defaults({
+    jar: true,
+    headers: {
+      'Connection': 'keep-alive',
+      'Host': 'www.zimuzu.tv',
+      'Referer': 'http://www.zimuzu.tv/',
+      'Upgrade-Insecure-Requests': '1',
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.82 Safari/537.36',
+    }
+  })
 
   this.init = function () {
     var self = this;
