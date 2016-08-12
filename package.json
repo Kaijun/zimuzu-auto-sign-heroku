@@ -1,21 +1,24 @@
 {
-  "name": "node-js-getting-started",
-  "version": "0.1.5",
-  "description": "A sample Node.js app using Express 4",
+  "name": "zimuzu-heroku-auto-sign",
+  "version": "2.0.0",
+  "description": "Zimuzu Heroku Auto Sign",
   "engines": {
-    "node": "0.12.7"
+    "node": "6.3.1"
   },
   "main": "index.js",
   "scripts": {
     "dev": "babel-node src/index.js",
     "build": "babel src --out-dir dist",
-    "prestart": "npm run build",
+    "postinstall": "npm run build",
     "start": "node dist/index.js"
   },
   "dependencies": {
     "allora": "^1.0.0",
     "express": "4.13.3",
-    "phantom": "^2.1.15"
+    "phantom": "^2.1.15",
+    "babel-cli": "^6.11.4",
+    "babel-plugin-transform-async-to-generator": "^6.8.0",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.11.5"
   },
   "repository": {
     "type": "git",
@@ -26,10 +29,5 @@
     "heroku",
     "express"
   ],
-  "license": "MIT",
-  "devDependencies": {
-    "babel-cli": "^6.11.4",
-    "babel-plugin-transform-async-to-generator": "^6.8.0",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.11.5"
-  }
+  "license": "MIT"
 }
