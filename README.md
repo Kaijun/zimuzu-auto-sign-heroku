@@ -9,3 +9,10 @@
 - 在**[Kaffeine](http://kaffeine.herokuapp.com/)**登记你的Heroku App
   * 不然Heroku有[Idle机制](https://blog.heroku.com/archives/2013/6/20/app_sleeping_on_heroku) 
 - Have Fun!
+
+## 技术栈
+- NodeJS v6
+- PhantomJS
+- Babel
+  * transform-async-to-generator
+  * transform-es2015-modules-commonjs
