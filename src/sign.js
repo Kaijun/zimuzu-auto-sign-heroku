@@ -8,6 +8,8 @@ const TRY_TIMEOUT = 2*3600*1000;
 export async function init() {
   initStampFile();
   let accounts = await loadAccounts();
+
+  batchSign(accounts);
   setInterval(function () {
     batchSign(accounts);
   }, TRY_TIMEOUT);
